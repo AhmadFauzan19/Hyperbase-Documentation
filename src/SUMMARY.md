@@ -35,3 +35,5 @@
   - [MQTT Logging](04_features/11_mqtt_log.md)
   - [Change Server](04_features/12_change_server.md)
   - [Remove an Account](04_features/13_remove_an_account.md)
+  - [Query](04_features/14_query.md)
+  - [Query SQL](04_features/15_query_sql.md)
