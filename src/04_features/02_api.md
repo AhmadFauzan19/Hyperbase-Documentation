@@ -7,6 +7,68 @@ Natively, Hyperbase supports three types of APIs for use in your application. Th
 REST API provide all capabilities to access or manipulate the data. To access the data based on rules applied, you can explore the provided REST API hosted on Postman at [this link](https://bit.ly/hyperbase-postman).\
 ![REST API](_assets/rest_api.png)
 
+Before using the API, there are a few things you need to set up.
+
+### 1. Set base URL variable
+
+```
+{{base_url}} = http://{hyperbase_address}:{port}
+```
+
+![Variable](_assets/environment.png)
+
+### 2. Authenticate
+
+```
+POST {{base_url}}/api/rest/auth/
+```
+
+There are two different ways to authenticate: password-based or token-based.
+
+#### Password Based
+
+Enter your email and password at this endpoint:
+
+```
+POST {{base_url}}/api/rest/auth/password-based
+```
+
+```JSON
+{
+    "email": "", // Required. String. Email
+    "password": "" // Required. String
+}
+```
+
+#### Token Based
+
+Provide your token and token ID. The data field is optional.
+
+```
+POST {{base_url}}/api/rest/auth/token-based
+```
+
+```JSON
+{
+    "token_id": "",  // Required. UUID
+    "token": "", // Required. String
+    "collection_id": "", // Required if allow_anonymous is disabled
+    "data": {
+        "username": "",
+        "password": ""
+    }
+}
+```
+
+### 3. Store token
+
+Check the response, and you will receive a token.
+Store this token in an environment variable named token.
+
+### 4. Choose API
+
+You can now use any API endpoint you want.
+
 ## WebSocket API
 
 WebSocket is used to listen for updated data on a particular collection. Each successful insert, update, or delete operation will notify each WebSocket listener client.\

@@ -37,3 +37,4 @@
   - [Remove an Account](04_features/13_remove_an_account.md)
   - [Query](04_features/14_query.md)
   - [Query SQL](04_features/15_query_sql.md)
+  - [Scylla Monitoring and Alert](04_features/16_scylla_monitoring_and_alert.md)
