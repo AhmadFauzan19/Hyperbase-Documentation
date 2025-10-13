@@ -15,7 +15,7 @@ The SQL Query API accepts a JSON payload with a query field containing your SQL 
 
 ```JSON
 {
-    "query": "SELECT * FROM 'data' LIMIT 10"
+    "query": "SELECT * FROM data LIMIT 10"
 }
 ```
 

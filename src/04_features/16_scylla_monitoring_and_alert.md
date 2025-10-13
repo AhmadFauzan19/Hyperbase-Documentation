@@ -1,6 +1,6 @@
 # Scylla Monitoring Stack
 
-## Installation Guide
+## Installation Guide from ScyllaDB Official
 
 For detailed installation steps, please refer to the official Scylla Monitoring Stack installation guide:
 
@@ -45,14 +45,6 @@ Create the file `prometheus/scylla_servers.yml`:
 
 ```bash
 ./start-all.sh -d prometheus_data
-```
-
-### With Localhost Access
-
-If Scylla runs on the same host as monitoring:
-
-```bash
-./start-all.sh -l -d prometheus_data
 ```
 
 ### Using Scylla Manager Consul API
@@ -101,7 +93,7 @@ Access the Prometheus web interface at:
 http://<monitoring_server_ip>:9090
 ```
 
-Edit this file `prometheus/prom_rules/prometheus.rules.yml` to change rules for alert.
+Edit this file `prometheus/prom_rules/prometheus.rules.yml` to change rules for alert. You can delete or add rules in this file.
 
 ### Alertmanager
 
@@ -111,7 +103,7 @@ Access the Alertmanager interface at:
 http://<monitoring_server_ip>:9093
 ```
 
-Edit this file `prometheus/rule_config.yml` to setup email config.
+Edit this file `prometheus/rule_config.yml` to setup email config. When an alert is triggered, an email will be sent to the recipient email you previously set up.
 
 Example
 
