@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>API - Hyperbase Documentation</title>
+        <title>Scylla Monitoring and Alert - Hyperbase Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -175,90 +175,103 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="api"><a class="header" href="#api">API</a></h1>
-<p>Natively, Hyperbase supports three types of APIs for use in your application. These three APIs have different uses.</p>
-<h2 id="rest-api"><a class="header" href="#rest-api">REST API</a></h2>
-<p>REST API provide all capabilities to access or manipulate the data. To access the data based on rules applied, you can explore the provided REST API hosted on Postman at <a href="https://bit.ly/hyperbase-postman">this link</a>.<br />
-<img src="_assets/rest_api.png" alt="REST API" /></p>
-<p>Before using the API, there are a few things you need to set up.</p>
-<h3 id="1-set-base-url-variable"><a class="header" href="#1-set-base-url-variable">1. Set base URL variable</a></h3>
-<pre><code>{{base_url}} = http://{hyperbase_address}:{port}
+                        <h1 id="scylla-monitoring-stack"><a class="header" href="#scylla-monitoring-stack">Scylla Monitoring Stack</a></h1>
+<h2 id="installation-guide"><a class="header" href="#installation-guide">Installation Guide</a></h2>
+<p>For detailed installation steps, please refer to the official Scylla Monitoring Stack installation guide:</p>
+<p><a href="https://monitoring.docs.scylladb.com/stable/install/monitoring-stack.html">Install Scylla Monitoring Stack</a></p>
+<h2 id="installation-steps"><a class="header" href="#installation-steps">Installation Steps</a></h2>
+<ol>
+<li><strong>Download the monitoring stack:</strong></li>
+</ol>
+<pre><code class="language-bash">wget https://github.com/scylladb/scylla-monitoring/archive/4.11.0.tar.gz
+tar -xvf 4.11.0.tar.gz
+cd scylla-monitoring-4.11.0
 </code></pre>
-<p><img src="_assets/environment.png" alt="Variable" /></p>
-<h3 id="2-authenticate"><a class="header" href="#2-authenticate">2. Authenticate</a></h3>
-<pre><code>POST {{base_url}}/api/rest/auth/
+<p>Or clone from Git:</p>
+<pre><code class="language-bash">git clone https://github.com/scylladb/scylla-monitoring.git
+cd scylla-monitoring
+git checkout branch-4.11
 </code></pre>
-<p>There are two different ways to authenticate: password-based or token-based.</p>
-<h4 id="password-based"><a class="header" href="#password-based">Password Based</a></h4>
-<p>Enter your email and password at this endpoint:</p>
-<pre><code>POST {{base_url}}/api/rest/auth/password-based
+<h2 id="configure-scylla-cluster-nodes"><a class="header" href="#configure-scylla-cluster-nodes">Configure Scylla Cluster Nodes</a></h2>
+<h3 id="1-create-scylla-servers-configuration"><a class="header" href="#1-create-scylla-servers-configuration">1. Create Scylla Servers Configuration</a></h3>
+<p>Create the file <code>prometheus/scylla_servers.yml</code>:</p>
+<pre><code class="language-yaml">- targets:
+    - 172.17.0.2
+    - 172.17.0.3
+  labels:
+    cluster: cluster1
+    dc: dc1
 </code></pre>
-<pre><code class="language-JSON">{
-    "email": "", // Required. String. Email
-    "password": "" // Required. String
-}
+<h2 id="start-monitoring-stack"><a class="header" href="#start-monitoring-stack">Start Monitoring Stack</a></h2>
+<h3 id="basic-start"><a class="header" href="#basic-start">Basic Start</a></h3>
+<pre><code class="language-bash">./start-all.sh -d prometheus_data
 </code></pre>
-<h4 id="token-based"><a class="header" href="#token-based">Token Based</a></h4>
-<p>Provide your token and token ID. The data field is optional.</p>
-<pre><code>POST {{base_url}}/api/rest/auth/token-based
+<h3 id="with-localhost-access"><a class="header" href="#with-localhost-access">With Localhost Access</a></h3>
+<p>If Scylla runs on the same host as monitoring:</p>
+<pre><code class="language-bash">./start-all.sh -l -d prometheus_data
 </code></pre>
-<pre><code class="language-JSON">{
-    "token_id": "",  // Required. UUID
-    "token": "", // Required. String
-    "collection_id": "", // Required if allow_anonymous is disabled
-    "data": {
-        "username": "",
-        "password": ""
-    }
-}
+<h3 id="using-scylla-manager-consul-api"><a class="header" href="#using-scylla-manager-consul-api">Using Scylla Manager Consul API</a></h3>
+<pre><code class="language-bash">./start-all.sh -L 10.10.0.1 -d prometheus_data
 </code></pre>
-<h3 id="3-store-token"><a class="header" href="#3-store-token">3. Store token</a></h3>
-<p>Check the response, and you will receive a token.
-Store this token in an environment variable named token.</p>
-<h3 id="4-choose-api"><a class="header" href="#4-choose-api">4. Choose API</a></h3>
-<p>You can now use any API endpoint you want.</p>
-<h2 id="websocket-api"><a class="header" href="#websocket-api">WebSocket API</a></h2>
-<p>WebSocket is used to listen for updated data on a particular collection. Each successful insert, update, or delete operation will notify each WebSocket listener client.<br />
-To listen to a specific collection, you can connect to WebSocket at the path below.</p>
-<pre><code>{WebSocketProtocol}://{HyperbaseBaseURL}/api/rest/project/{ProjectID}/collection/{CollectionID}/subscribe?token={AuthToken}
+<p>Replace <code>10.10.0.1</code> with your Scylla Manager IP address.</p>
+<h3 id="multiple-versions"><a class="header" href="#multiple-versions">Multiple Versions</a></h3>
+<p>Load dashboards for multiple Scylla versions:</p>
+<pre><code class="language-bash">./start-all.sh -v 2020.1,2019.1 -M 2.1 -d prometheus_data
 </code></pre>
-<p>Below is an example.</p>
-<pre><code>wss://api.hyperbase.in/api/rest/project/4585def6-b2af-418f-8b31-926bd579b3f5/collection/4585def6-b2af-418f-8b31-926bd579b3f5/subscribe?token=eyJ0eXAiOiJKV1XiLCJhbGciOiJIUzI1NiJ9.eyJpZCa6eyJBaG1paaI6IaSpOgy3M2M4LWUo0gUtNzFiMy1iYjnklTdXYthhY2Q3MKY0ZGJ9LCJleHAiOjwwMjexMDmxNTh9.g4bkzf46RmIuUWYiJ4XI8g-i2c4dyEjb2VZxX2CGxFs
+<h2 id="stop-monitoring-stack"><a class="header" href="#stop-monitoring-stack">Stop Monitoring Stack</a></h2>
+<pre><code class="language-bash">./kill-all.sh
 </code></pre>
-<h2 id="mqtt"><a class="header" href="#mqtt">MQTT</a></h2>
-<p>MQTT can be used to insert new records to a specific collection by publishing messages with a specific topic to an MQTT broker. Hyperbase server subscribes to the MQTT topic as set in <a href="../03_installation/04_setup/04_hyperbase.html#configuration-file">the configuration file</a>. A valid message received by the Hyperbase server will add the record into the collection. The added record will also be broadcast to the WebSocket listener client.<br />
-A valid MQTT message has JSON structure as below.</p>
-<pre><code class="language-JSON">{
-    "project_id": "project_id", // replace with your project id
-    "token_id": "token_id", // replace with your token id
-    "user": { // If using a token set to allow anonymous sign-in, this field becomes optional.
-        "collection_id": "collection_id", // id of the collection where the user id exists
-        "id": "user_id"
-    },
-    "collection_id": "target_collection_id", // id of the collection where the data will be inserted
-    "data": { // this is an example of the data to be entered
-        "field_a": "value_a",
-        "field_b": 2,
-        "field_c": 3.3,
-        "field_d": {
-            "sub_field_d": "value"
-        }
-    }
-}
+<h2 id="accessing-the-monitoring-interfaces"><a class="header" href="#accessing-the-monitoring-interfaces">Accessing the Monitoring Interfaces</a></h2>
+<p>After successfully installing the Scylla Monitoring Stack, you can access the following interfaces:</p>
+<h3 id="grafana"><a class="header" href="#grafana">Grafana</a></h3>
+<p>Access the Grafana dashboard by navigating to:</p>
+<pre><code>http://&lt;monitoring_server_ip&gt;:3000
 </code></pre>
-<p>If MQTT authentication and/or authorization is enabled, the MQTT client must pass such authentication and/or authorization before sending valid messages.</p>
+<p><strong>Default login credentials:</strong></p>
+<ul>
+<li>Username: <code>admin</code></li>
+<li>Password: <code>admin</code> (you will be prompted to change this upon first login)</li>
+</ul>
+<h3 id="prometheus"><a class="header" href="#prometheus">Prometheus</a></h3>
+<p>Access the Prometheus web interface at:</p>
+<pre><code>http://&lt;monitoring_server_ip&gt;:9090
+</code></pre>
+<p>Edit this file <code>prometheus/prom_rules/prometheus.rules.yml</code> to change rules for alert.</p>
+<h3 id="alertmanager"><a class="header" href="#alertmanager">Alertmanager</a></h3>
+<p>Access the Alertmanager interface at:</p>
+<pre><code>http://&lt;monitoring_server_ip&gt;:9093
+</code></pre>
+<p>Edit this file <code>prometheus/rule_config.yml</code> to setup email config.</p>
+<p>Example</p>
+<pre><code class="language-yaml">global:
+  smtp_smarthost: 'smtp.example.com:587'      # Replace with your SMTP server
+  smtp_from: 'alerts@example.com'            # Replace with sender email
+  smtp_auth_username: 'username@example.com' # Replace with SMTP username
+  smtp_auth_password: 'yourpassword'         # Replace with SMTP password
+  smtp_require_tls: true
+
+route:
+  receiver: 'email-alert'
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+
+receivers:
+  - name: 'email-alert'
+    email_configs:
+      - to: 'user@example.com'   # Replace with recipient email
+        send_resolved: true
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../04_features/01_chapter.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../04_features/15_query_sql.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../04_features/03_project.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -266,13 +279,10 @@ A valid MQTT message has JSON structure as below.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../04_features/01_chapter.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../04_features/15_query_sql.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../04_features/03_project.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
             </nav>
 
         </div>

@@ -440,6 +440,14 @@ db: # choose one database backend
   sqlite:
     path: "hyperbase.db"
     max_connections: 100
+  scylladb:
+    port:
+      - "127.0.0.1"   
+      - "127.0.0.2"
+    port: 9042
+    keyspace: "hyperbase_keyspace"
+    username: "user"     
+    password: "password" 
 
 bucket:
   path: "/app/hyperbase-bucket"
@@ -779,6 +787,43 @@ Create an authorization mechanism with the following properties.</p>
 <h2 id="rest-api"><a class="header" href="#rest-api">REST API</a></h2>
 <p>REST API provide all capabilities to access or manipulate the data. To access the data based on rules applied, you can explore the provided REST API hosted on Postman at <a href="https://bit.ly/hyperbase-postman">this link</a>.<br />
 <img src="04_features/_assets/rest_api.png" alt="REST API" /></p>
+<p>Before using the API, there are a few things you need to set up.</p>
+<h3 id="1-set-base-url-variable"><a class="header" href="#1-set-base-url-variable">1. Set base URL variable</a></h3>
+<pre><code>{{base_url}} = http://{hyperbase_address}:{port}
+</code></pre>
+<p><img src="04_features/_assets/environment.png" alt="Variable" /></p>
+<h3 id="2-authenticate"><a class="header" href="#2-authenticate">2. Authenticate</a></h3>
+<pre><code>POST {{base_url}}/api/rest/auth/
+</code></pre>
+<p>There are two different ways to authenticate: password-based or token-based.</p>
+<h4 id="password-based"><a class="header" href="#password-based">Password Based</a></h4>
+<p>Enter your email and password at this endpoint:</p>
+<pre><code>POST {{base_url}}/api/rest/auth/password-based
+</code></pre>
+<pre><code class="language-JSON">{
+    "email": "", // Required. String. Email
+    "password": "" // Required. String
+}
+</code></pre>
+<h4 id="token-based"><a class="header" href="#token-based">Token Based</a></h4>
+<p>Provide your token and token ID. The data field is optional.</p>
+<pre><code>POST {{base_url}}/api/rest/auth/token-based
+</code></pre>
+<pre><code class="language-JSON">{
+    "token_id": "",  // Required. UUID
+    "token": "", // Required. String
+    "collection_id": "", // Required if allow_anonymous is disabled
+    "data": {
+        "username": "",
+        "password": ""
+    }
+}
+</code></pre>
+<h3 id="3-store-token"><a class="header" href="#3-store-token">3. Store token</a></h3>
+<p>Check the response, and you will receive a token.
+Store this token in an environment variable named token.</p>
+<h3 id="4-choose-api"><a class="header" href="#4-choose-api">4. Choose API</a></h3>
+<p>You can now use any API endpoint you want.</p>
 <h2 id="websocket-api"><a class="header" href="#websocket-api">WebSocket API</a></h2>
 <p>WebSocket is used to listen for updated data on a particular collection. Each successful insert, update, or delete operation will notify each WebSocket listener client.<br />
 To listen to a specific collection, you can connect to WebSocket at the path below.</p>
@@ -1099,7 +1144,95 @@ This will bring up the Remove Account modal.<br />
 <tr><td>CAST</td><td>Mengubah tipe data suatu kolom.</td></tr>
 <tr><td>DISTINCT</td><td>Menghilangkan nilai duplikat.</td></tr>
 </tbody></table>
-</div>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="scylla-monitoring-stack"><a class="header" href="#scylla-monitoring-stack">Scylla Monitoring Stack</a></h1>
+<h2 id="installation-guide"><a class="header" href="#installation-guide">Installation Guide</a></h2>
+<p>For detailed installation steps, please refer to the official Scylla Monitoring Stack installation guide:</p>
+<p><a href="https://monitoring.docs.scylladb.com/stable/install/monitoring-stack.html">Install Scylla Monitoring Stack</a></p>
+<h2 id="installation-steps"><a class="header" href="#installation-steps">Installation Steps</a></h2>
+<ol>
+<li><strong>Download the monitoring stack:</strong></li>
+</ol>
+<pre><code class="language-bash">wget https://github.com/scylladb/scylla-monitoring/archive/4.11.0.tar.gz
+tar -xvf 4.11.0.tar.gz
+cd scylla-monitoring-4.11.0
+</code></pre>
+<p>Or clone from Git:</p>
+<pre><code class="language-bash">git clone https://github.com/scylladb/scylla-monitoring.git
+cd scylla-monitoring
+git checkout branch-4.11
+</code></pre>
+<h2 id="configure-scylla-cluster-nodes"><a class="header" href="#configure-scylla-cluster-nodes">Configure Scylla Cluster Nodes</a></h2>
+<h3 id="1-create-scylla-servers-configuration"><a class="header" href="#1-create-scylla-servers-configuration">1. Create Scylla Servers Configuration</a></h3>
+<p>Create the file <code>prometheus/scylla_servers.yml</code>:</p>
+<pre><code class="language-yaml">- targets:
+    - 172.17.0.2
+    - 172.17.0.3
+  labels:
+    cluster: cluster1
+    dc: dc1
+</code></pre>
+<h2 id="start-monitoring-stack"><a class="header" href="#start-monitoring-stack">Start Monitoring Stack</a></h2>
+<h3 id="basic-start"><a class="header" href="#basic-start">Basic Start</a></h3>
+<pre><code class="language-bash">./start-all.sh -d prometheus_data
+</code></pre>
+<h3 id="with-localhost-access"><a class="header" href="#with-localhost-access">With Localhost Access</a></h3>
+<p>If Scylla runs on the same host as monitoring:</p>
+<pre><code class="language-bash">./start-all.sh -l -d prometheus_data
+</code></pre>
+<h3 id="using-scylla-manager-consul-api"><a class="header" href="#using-scylla-manager-consul-api">Using Scylla Manager Consul API</a></h3>
+<pre><code class="language-bash">./start-all.sh -L 10.10.0.1 -d prometheus_data
+</code></pre>
+<p>Replace <code>10.10.0.1</code> with your Scylla Manager IP address.</p>
+<h3 id="multiple-versions"><a class="header" href="#multiple-versions">Multiple Versions</a></h3>
+<p>Load dashboards for multiple Scylla versions:</p>
+<pre><code class="language-bash">./start-all.sh -v 2020.1,2019.1 -M 2.1 -d prometheus_data
+</code></pre>
+<h2 id="stop-monitoring-stack"><a class="header" href="#stop-monitoring-stack">Stop Monitoring Stack</a></h2>
+<pre><code class="language-bash">./kill-all.sh
+</code></pre>
+<h2 id="accessing-the-monitoring-interfaces"><a class="header" href="#accessing-the-monitoring-interfaces">Accessing the Monitoring Interfaces</a></h2>
+<p>After successfully installing the Scylla Monitoring Stack, you can access the following interfaces:</p>
+<h3 id="grafana"><a class="header" href="#grafana">Grafana</a></h3>
+<p>Access the Grafana dashboard by navigating to:</p>
+<pre><code>http://&lt;monitoring_server_ip&gt;:3000
+</code></pre>
+<p><strong>Default login credentials:</strong></p>
+<ul>
+<li>Username: <code>admin</code></li>
+<li>Password: <code>admin</code> (you will be prompted to change this upon first login)</li>
+</ul>
+<h3 id="prometheus"><a class="header" href="#prometheus">Prometheus</a></h3>
+<p>Access the Prometheus web interface at:</p>
+<pre><code>http://&lt;monitoring_server_ip&gt;:9090
+</code></pre>
+<p>Edit this file <code>prometheus/prom_rules/prometheus.rules.yml</code> to change rules for alert.</p>
+<h3 id="alertmanager"><a class="header" href="#alertmanager">Alertmanager</a></h3>
+<p>Access the Alertmanager interface at:</p>
+<pre><code>http://&lt;monitoring_server_ip&gt;:9093
+</code></pre>
+<p>Edit this file <code>prometheus/rule_config.yml</code> to setup email config.</p>
+<p>Example</p>
+<pre><code class="language-yaml">global:
+  smtp_smarthost: 'smtp.example.com:587'      # Replace with your SMTP server
+  smtp_from: 'alerts@example.com'            # Replace with sender email
+  smtp_auth_username: 'username@example.com' # Replace with SMTP username
+  smtp_auth_password: 'yourpassword'         # Replace with SMTP password
+  smtp_require_tls: true
+
+route:
+  receiver: 'email-alert'
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+
+receivers:
+  - name: 'email-alert'
+    email_configs:
+      - to: 'user@example.com'   # Replace with recipient email
+        send_resolved: true
+</code></pre>
+
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
